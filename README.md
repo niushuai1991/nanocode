@@ -20,6 +20,23 @@ export ANTHROPIC_API_KEY="your-key"
 python nanocode.py
 ```
 
+### OpenRouter
+
+Use [OpenRouter](https://openrouter.ai) to access any model:
+
+```bash
+export OPENROUTER_API_KEY="your-key"
+python nanocode.py
+```
+
+To use a different model:
+
+```bash
+export OPENROUTER_API_KEY="your-key"
+export MODEL="openai/gpt-5.2"
+python nanocode.py
+```
+
 ## Commands
 
 - `/c` - Clear conversation
