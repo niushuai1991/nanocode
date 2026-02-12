@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """nanocode - minimal claude code alternative"""
 
-import glob as globlib, json, os, re, subprocess, urllib.request
+import glob as globlib, json, os, re, subprocess
 from dotenv import load_dotenv
+from urllib.request import Request, urlopen
 
 load_dotenv()
 
@@ -109,6 +110,19 @@ def bash(args):
     return "".join(output_lines).strip() or "(empty)"
 
 
+def webfetch(args):
+    url = args["url"]
+    try:
+        req = Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urlopen(req, timeout=30) as response:
+            content = response.read().decode("utf-8", errors="ignore")
+            lines = content.split("\n")
+            limit = args.get("limit", len(lines))
+            return "\n".join(lines[:limit])
+    except Exception as e:
+        return f"error: {e}"
+
+
 # --- Tool definitions: (description, schema, function) ---
 
 TOOLS = {
@@ -141,6 +155,11 @@ TOOLS = {
         "Run shell command",
         {"cmd": "string"},
         bash,
+    ),
+    "webfetch": (
+        "Fetch content from URL",
+        {"url": "string", "limit": "number?"},
+        webfetch,
     ),
 }
 
@@ -180,7 +199,7 @@ def make_schema():
 
 
 def call_api(messages, system_prompt):
-    request = urllib.request.Request(
+    request = Request(
         API_URL,
         data=json.dumps(
             {
@@ -201,7 +220,7 @@ def call_api(messages, system_prompt):
             ),
         },
     )
-    response = urllib.request.urlopen(request)
+    response = urlopen(request)
     return json.loads(response.read())
 
 
