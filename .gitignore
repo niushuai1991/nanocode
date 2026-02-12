@@ -1,0 +1,39 @@
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# 依赖目录
+node_modules/
+vendor/
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# 构建产物
+dist/
+build/
+*.egg-info/
+*.egg
+
+# 日志文件
+*.log
+logs/
+
+# 环境配置
+.env
+.env.local
+
+# 操作系统
+Thumbs.db
+.DS_Store
+
+# 临时文件
+tmp/
+temp/
+*.tmp

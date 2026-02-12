@@ -2,10 +2,20 @@
 """nanocode - minimal claude code alternative"""
 
 import glob as globlib, json, os, re, subprocess, urllib.request
+from dotenv import load_dotenv
 
-OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY")
-API_URL = "https://openrouter.ai/api/v1/messages" if OPENROUTER_KEY else "https://api.anthropic.com/v1/messages"
-MODEL = os.environ.get("MODEL", "anthropic/claude-opus-4.5" if OPENROUTER_KEY else "claude-opus-4-5")
+load_dotenv()
+
+BASE_URL = os.environ.get("ANTHROPIC_BASE_URL", "https://api.anthropic.com")
+MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-3-5-sonnet-20241022")
+AUTH_TOKEN = os.environ.get("ANTHROPIC_AUTH_TOKEN", "")
+OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+
+API_URL = (
+    (BASE_URL.rstrip("/") + "/v1/messages")
+    if not OPENROUTER_KEY
+    else "https://openrouter.ai/api/v1/messages"
+)
 
 # ANSI colors
 RESET, BOLD, DIM = "\033[0m", "\033[1m", "\033[2m"
@@ -77,9 +87,11 @@ def grep(args):
 
 def bash(args):
     proc = subprocess.Popen(
-        args["cmd"], shell=True,
-        stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-        text=True
+        args["cmd"],
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
     )
     output_lines = []
     try:
@@ -182,7 +194,11 @@ def call_api(messages, system_prompt):
         headers={
             "Content-Type": "application/json",
             "anthropic-version": "2023-06-01",
-            **({"Authorization": f"Bearer {OPENROUTER_KEY}"} if OPENROUTER_KEY else {"x-api-key": os.environ.get("ANTHROPIC_API_KEY", "")}),
+            **(
+                {"Authorization": f"Bearer {OPENROUTER_KEY}"}
+                if OPENROUTER_KEY
+                else {"x-api-key": AUTH_TOKEN}
+            ),
         },
     )
     response = urllib.request.urlopen(request)
@@ -198,7 +214,16 @@ def render_markdown(text):
 
 
 def main():
-    print(f"{BOLD}nanocode{RESET} | {DIM}{MODEL} ({'OpenRouter' if OPENROUTER_KEY else 'Anthropic'}) | {os.getcwd()}{RESET}\n")
+    provider = (
+        "OpenRouter"
+        if OPENROUTER_KEY
+        else (
+            BASE_URL.replace("https://api.", "").replace("https://", "").split("/")[0]
+            if BASE_URL
+            else "Anthropic"
+        )
+    )
+    print(f"{BOLD}nanocode{RESET} | {DIM}{MODEL} ({provider}) | {os.getcwd()}{RESET}\n")
     messages = []
     system_prompt = f"Concise coding assistant. cwd: {os.getcwd()}"
 
